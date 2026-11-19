@@ -1,0 +1,132 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 30 25% 96%;
+    --foreground: 15 30% 8%;
+    --card: 30 20% 98%;
+    --card-foreground: 15 30% 8%;
+    --popover: 30 20% 98%;
+    --popover-foreground: 15 30% 8%;
+    --primary: 15 30% 8%;
+    --primary-foreground: 30 25% 96%;
+    --secondary: 30 15% 88%;
+    --secondary-foreground: 15 30% 8%;
+    --muted: 30 12% 90%;
+    --muted-foreground: 15 20% 38%;
+    --accent: 28 40% 55%;
+    --accent-ink: 26 50% 36%;
+    --accent-foreground: 30 25% 98%;
+    --destructive: 0 74% 46%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 30 15% 85%;
+    --input: 30 15% 82%;
+    --ring: 26 50% 36%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 15 30% 6%;
+    --foreground: 30 20% 92%;
+    --card: 15 28% 9%;
+    --card-foreground: 30 20% 92%;
+    --popover: 15 28% 9%;
+    --popover-foreground: 30 20% 92%;
+    --primary: 30 20% 92%;
+    --primary-foreground: 15 30% 6%;
+    --secondary: 15 20% 16%;
+    --secondary-foreground: 30 20% 92%;
+    --muted: 15 18% 18%;
+    --muted-foreground: 30 15% 70%;
+    --accent: 28 40% 55%;
+    --accent-ink: 28 45% 65%;
+    --accent-foreground: 30 25% 98%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 15 20% 20%;
+    --input: 15 20% 24%;
+    --ring: 28 45% 65%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Noto Serif TC', 'Inter', serif;
+  }
+
+  body {
+    @apply bg-background text-foreground font-chinese antialiased selection:bg-accent/25 selection:text-foreground;
+    overflow-x: clip;
+  }
+
+  /* Pointer affordances for enabled interactive elements (antislop-human R-39) */
+  a[href],
+  button,
+  summary,
+  select,
+  label[for],
+  label:has(> input[type="checkbox"], > input[type="radio"]),
+  [role="button"],
+  [role="link"],
+  [role="tab"],
+  [role="menuitem"],
+  [role="option"],
+  [role="switch"],
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="file"],
+  input[type="submit"],
+  input[type="button"],
+  input[type="reset"] {
+    cursor: pointer;
+  }
+
+  :disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
+  /* High-contrast visible focus indicator */
+  :focus-visible {
+    outline: 2px solid hsl(var(--accent-ink));
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Custom scrollbar themed to warm coffee palette */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--accent) / 0.45);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--accent) / 0.75);
+}
