@@ -7,6 +7,7 @@ import { useCoffee } from "@/context/CoffeeContext"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
+import { SpotlightTiltCard } from "@/components/motion/CoffeeMotion"
 import { pageTransition, PREMIUM_EASE } from "@/lib/motion"
 
 const BLOG_CATEGORIES = ["全部", "品牌公告", "手沖知識", "咖啡豆介紹"]
@@ -60,7 +61,7 @@ export const Blog = () => {
             </p>
           </motion.div>
 
-          {/* Search Bar & Category Filters */}
+          {/* Search Bar & Sliding Category Filters */}
           <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-4 max-w-4xl mx-auto">
             <div
               role="group"
@@ -75,13 +76,21 @@ export const Blog = () => {
                     type="button"
                     onClick={() => setSelectedCategory(cat)}
                     aria-pressed={isSelected}
-                    className={`min-h-[44px] px-4 py-1.5 rounded-full text-xs sm:text-sm font-chinese transition-colors duration-200 ${
+                    className={`relative min-h-[44px] px-4 py-1.5 rounded-full text-xs sm:text-sm font-chinese transition-colors duration-200 ${
                       isSelected
-                        ? "bg-accent-ink text-white font-medium shadow-sm"
+                        ? "text-white font-medium"
                         : "bg-secondary/75 hover:bg-secondary text-foreground/85 hover:text-foreground"
                     }`}
                   >
-                    {cat}
+                    {isSelected && (
+                      <motion.span
+                        layoutId="blog-category-pill"
+                        transition={{ type: "spring", stiffness: 360, damping: 28 }}
+                        className="absolute inset-0 rounded-full bg-accent-ink shadow-sm"
+                        aria-hidden="true"
+                      />
+                    )}
+                    <span className="relative z-10">{cat}</span>
                   </button>
                 )
               })}
@@ -117,64 +126,66 @@ export const Blog = () => {
                 <motion.div
                   key={post.id}
                   layout
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 18, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, transition: { duration: 0.1 } }}
                   transition={{
-                    duration: 0.3,
-                    delay: Math.min(index * 0.04, 0.2),
+                    duration: 0.35,
+                    delay: Math.min(index * 0.05, 0.22),
                     ease: PREMIUM_EASE,
                   }}
                 >
-                  <Link to={`/blog/${post.id}`} className="group block h-full rounded-lg">
-                    <Card className="h-full overflow-hidden border-border/80 hover:border-accent-ink/70 hover:shadow-lg transition-all duration-300 bg-card flex flex-col justify-between">
-                      <div>
-                        <div className="aspect-[16/10] overflow-hidden bg-secondary relative">
-                          {post.cover_image ? (
-                            <img
-                              src={post.cover_image}
-                              alt={post.title}
-                              width={800}
-                              height={500}
-                              className="size-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="size-full flex items-center justify-center text-muted-foreground/60">
-                              <BookOpen className="size-10" aria-hidden="true" />
+                  <SpotlightTiltCard className="h-full rounded-lg" maxTilt={3.5}>
+                    <Link to={`/blog/${post.id}`} className="group block h-full rounded-lg">
+                      <Card className="h-full overflow-hidden border-border/80 hover:border-accent-ink/70 hover:shadow-lg transition-all duration-300 bg-card flex flex-col justify-between">
+                        <div>
+                          <div className="aspect-[16/10] overflow-hidden bg-secondary relative">
+                            {post.cover_image ? (
+                              <img
+                                src={post.cover_image}
+                                alt={post.title}
+                                width={800}
+                                height={500}
+                                className="size-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="size-full flex items-center justify-center text-muted-foreground/60">
+                                <BookOpen className="size-10" aria-hidden="true" />
+                              </div>
+                            )}
+                            <div className="absolute top-3 left-3">
+                              <Badge
+                                variant="subtle"
+                                className="font-chinese text-xs bg-background/95 text-foreground"
+                              >
+                                {post.category}
+                              </Badge>
                             </div>
-                          )}
-                          <div className="absolute top-3 left-3">
-                            <Badge
-                              variant="subtle"
-                              className="font-chinese text-xs bg-background/95 text-foreground"
-                            >
-                              {post.category}
-                            </Badge>
                           </div>
+
+                          <CardContent className="p-6 flex flex-col gap-3">
+                            <h2 className="font-heading text-xl font-semibold text-foreground group-hover:text-accent-ink transition-colors leading-snug line-clamp-2">
+                              {post.title}
+                            </h2>
+                            <p className="text-sm text-foreground/75 font-chinese line-clamp-3 leading-relaxed">
+                              {post.summary}
+                            </p>
+                          </CardContent>
                         </div>
 
-                        <CardContent className="p-6 flex flex-col gap-3">
-                          <h2 className="font-heading text-xl font-semibold text-foreground group-hover:text-accent-ink transition-colors leading-snug line-clamp-2">
-                            {post.title}
-                          </h2>
-                          <p className="text-sm text-foreground/75 font-chinese line-clamp-3 leading-relaxed">
-                            {post.summary}
-                          </p>
-                        </CardContent>
-                      </div>
-
-                      <div className="p-6 pt-0 flex items-center justify-between text-xs text-muted-foreground border-t border-border/40 font-body">
-                        <div className="flex items-center gap-1.5 tabular-nums">
-                          <Calendar className="size-3.5 text-accent-ink" aria-hidden="true" />
-                          <span>{formattedDate}</span>
+                        <div className="p-6 pt-0 flex items-center justify-between text-xs text-muted-foreground border-t border-border/40 font-body">
+                          <div className="flex items-center gap-1.5 tabular-nums">
+                            <Calendar className="size-3.5 text-accent-ink" aria-hidden="true" />
+                            <span>{formattedDate}</span>
+                          </div>
+                          <span className="font-chinese text-accent-ink group-hover:translate-x-0.5 transition-transform flex items-center gap-1 font-medium">
+                            閱讀文章 <ArrowRight className="size-3" aria-hidden="true" />
+                          </span>
                         </div>
-                        <span className="font-chinese text-accent-ink group-hover:underline flex items-center gap-1 font-medium">
-                          閱讀文章 <ArrowRight className="size-3" aria-hidden="true" />
-                        </span>
-                      </div>
-                    </Card>
-                  </Link>
+                      </Card>
+                    </Link>
+                  </SpotlightTiltCard>
                 </motion.div>
               )
             })}

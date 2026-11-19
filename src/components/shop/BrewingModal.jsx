@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { motion, useReducedMotion } from "framer-motion"
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import {
   Dialog,
   DialogContent,
@@ -23,6 +23,7 @@ import {
 } from "lucide-react"
 import confetti from "canvas-confetti"
 import { sanitizeHtml } from "@/lib/security"
+import { PREMIUM_EASE } from "@/lib/motion"
 
 const STAGE_DESCRIPTIONS = [
   { title: "研磨就緒", desc: "新鮮研磨釋放出迷人乾香氣，粉層均勻平整" },
@@ -40,9 +41,8 @@ function BrewingModalBody({ product }) {
 
   useEffect(() => {
     if (!isBrewing) return
-    if (brewingStage >= 3) {
-      return
-    }
+    if (brewingStage >= 3) return
+
     const timer = setTimeout(() => {
       const next = brewingStage + 1
       setBrewingStage(next)
@@ -51,8 +51,8 @@ function BrewingModalBody({ product }) {
         if (!prefersReducedMotion) {
           try {
             confetti({
-              particleCount: 40,
-              spread: 60,
+              particleCount: 45,
+              spread: 65,
               origin: { y: 0.7 },
               colors: ["#b87a4c", "#e3a857", "#2c1d11"],
             })
@@ -61,13 +61,18 @@ function BrewingModalBody({ product }) {
           }
         }
       }
-    }, 1500)
+    }, 1600)
     return () => clearTimeout(timer)
   }, [isBrewing, brewingStage, prefersReducedMotion])
 
   const handleStartBrewing = () => {
     setBrewingStage(1)
     setIsBrewing(true)
+  }
+
+  const handleSelectStage = (idx) => {
+    setIsBrewing(false)
+    setBrewingStage(idx)
   }
 
   const handleAddToCart = () => {
@@ -90,77 +95,220 @@ function BrewingModalBody({ product }) {
   }
 
   const safeDescriptionHtml = sanitizeHtml(product.description)
+  const isPouring = brewingStage === 1 || brewingStage === 2
+  const fillPercent =
+    brewingStage === 0 ? "8%" : brewingStage === 1 ? "34%" : brewingStage === 2 ? "72%" : "90%"
 
   return (
     <div className="p-6 pt-2 flex flex-col gap-6 max-h-[75vh] overflow-y-auto">
-      {/* Animated Brewing Chamber */}
-      <div className="relative rounded-xl bg-gradient-to-b from-secondary/50 via-secondary/20 to-background border border-border/70 px-6 py-7 flex flex-col items-center justify-center min-h-[240px] overflow-hidden">
-        <div className="relative h-24 w-32 flex items-center justify-center">
-          {/* Steam */}
-          {!prefersReducedMotion && (
-            <div className="absolute -top-3 flex gap-2" aria-hidden="true">
-              <span className="w-1.5 h-6 bg-accent/40 rounded-full animate-steam" />
-              <span className="w-1.5 h-8 bg-accent/30 rounded-full animate-steam [animation-delay:0.7s]" />
-              <span className="w-1.5 h-5 bg-accent/40 rounded-full animate-steam [animation-delay:1.4s]" />
-            </div>
-          )}
-
-          {/* Dripper / Filter graphic */}
-          <div className="relative z-10 flex flex-col items-center">
-            <div className="w-16 h-10 border-t-[20px] border-t-accent/80 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent relative drop-shadow-sm">
-              <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] text-white font-mono font-bold">
-                V60
-              </div>
-            </div>
-
-            <div className="h-6 flex items-center justify-center">
-              {brewingStage > 0 && brewingStage < 3 && (
-                <motion.div
-                  animate={prefersReducedMotion ? { y: 8 } : { y: [0, 16], opacity: [1, 0] }}
-                  transition={{ duration: 0.65, repeat: Infinity, ease: "easeIn" }}
-                  className="size-2 rounded-full bg-accent-ink"
-                  aria-hidden="true"
+      {/* Choreographed SVG Hand-Pour Brewing Chamber */}
+      <div className="relative shrink-0 rounded-xl bg-gradient-to-b from-secondary/55 via-secondary/25 to-background border border-border/70 px-5 pt-8 pb-6 flex flex-col items-center overflow-x-hidden">
+        <div className="relative h-44 w-60 pt-2 flex items-center justify-center">
+          <svg
+            viewBox="0 -10 220 175"
+            className="size-full overflow-visible"
+            aria-hidden="true"
+          >
+            {/* Aromatic Steam Wisps */}
+            {!prefersReducedMotion && brewingStage >= 1 && (
+              <g>
+                <motion.path
+                  d="M95,62 Q88,48 96,35 Q103,22 95,10"
+                  fill="none"
+                  stroke="hsl(28 45% 55% / 0.45)"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  animate={{ y: [0, -8, -14], opacity: [0, 0.7, 0] }}
+                  transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
                 />
-              )}
-              {brewingStage === 3 && (
-                <span className="text-xs text-emerald-700 dark:text-emerald-400 font-bold font-chinese">
-                  ✦ 滴濾完成 ✦
-                </span>
-              )}
-            </div>
+                <motion.path
+                  d="M112,58 Q119,44 111,30 Q105,18 113,6"
+                  fill="none"
+                  stroke="hsl(28 45% 55% / 0.35)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  animate={{ y: [0, -10, -16], opacity: [0, 0.65, 0] }}
+                  transition={{
+                    duration: 2.5,
+                    delay: 0.6,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                />
+              </g>
+            )}
 
-            <div className="w-20 h-12 border-2 border-border/80 rounded-b-xl relative bg-secondary/30 overflow-hidden">
-              <motion.div
-                className="absolute bottom-0 left-0 right-0 bg-accent/80"
-                initial={{ height: "10%" }}
-                animate={{
-                  height:
-                    brewingStage === 0
-                      ? "10%"
-                      : brewingStage === 1
-                      ? "35%"
-                      : brewingStage === 2
-                      ? "70%"
-                      : "90%",
-                }}
-                transition={{ duration: 0.6 }}
+            {/* Gooseneck Kettle (slides & tilts in during Bloom / Extraction) */}
+            <motion.g
+              initial={false}
+              animate={
+                isPouring
+                  ? { x: 0, y: 0, rotate: -14, opacity: 1 }
+                  : { x: 24, y: -6, rotate: 0, opacity: 0.35 }
+              }
+              transition={{ duration: 0.55, ease: PREMIUM_EASE }}
+              style={{ transformOrigin: "175px 38px" }}
+            >
+              {/* Kettle body */}
+              <path
+                d="M158,28 L194,28 L200,56 L154,56 Z"
+                fill="hsl(15 30% 14%)"
+                stroke="hsl(28 40% 55%)"
+                strokeWidth="1.5"
               />
-            </div>
-          </div>
+              {/* Kettle handle */}
+              <path
+                d="M196,32 C209,32 209,52 199,52"
+                fill="none"
+                stroke="hsl(15 30% 14%)"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+              {/* Gooseneck spout */}
+              <path
+                d="M156,50 C142,50 138,34 128,34"
+                fill="none"
+                stroke="hsl(15 30% 14%)"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+            </motion.g>
+
+            {/* Pouring Hot Water Stream */}
+            {isPouring && (
+              <motion.path
+                d="M124,38 Q114,48 110,68"
+                fill="none"
+                stroke="hsl(28 50% 65%)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeDasharray="6 4"
+                animate={
+                  prefersReducedMotion
+                    ? undefined
+                    : { strokeDashoffset: [0, -20] }
+                }
+                transition={{ duration: 0.5, repeat: Infinity, ease: "linear" }}
+              />
+            )}
+
+            {/* V60 Dripper Cone */}
+            <path
+              d="M78,66 L142,66 L118,98 L102,98 Z"
+              fill="hsl(28 45% 42%)"
+              stroke="hsl(15 30% 14%)"
+              strokeWidth="1.5"
+            />
+            {/* Coffee Bed Bloom Dome */}
+            <motion.path
+              d="M84,66 Q110,56 136,66 Z"
+              fill="hsl(20 35% 24%)"
+              animate={{
+                scaleY: brewingStage === 1 ? 1.45 : brewingStage === 2 ? 1.15 : 0.7,
+              }}
+              transition={{ duration: 0.6, ease: PREMIUM_EASE }}
+              style={{ transformOrigin: "110px 66px" }}
+            />
+            {/* Dripper Base Collar */}
+            <rect
+              x="92"
+              y="98"
+              width="36"
+              height="4"
+              rx="2"
+              fill="hsl(15 30% 14%)"
+            />
+
+            {/* Falling Coffee Droplet */}
+            {isPouring && !prefersReducedMotion && (
+              <motion.circle
+                cx="110"
+                cy="104"
+                r="2.8"
+                fill="hsl(26 55% 32%)"
+                animate={{ cy: [104, 128], opacity: [1, 0.9, 0] }}
+                transition={{ duration: 0.65, repeat: Infinity, ease: "easeIn" }}
+              />
+            )}
+
+            {/* Glass Carafe Outline & Rising Liquid */}
+            <defs>
+              <clipPath id="carafe-clip">
+                <path d="M84,104 L136,104 L144,148 Q145,156 136,156 L84,156 Q75,156 76,148 Z" />
+              </clipPath>
+            </defs>
+
+            <g clipPath="url(#carafe-clip)">
+              <rect
+                x="70"
+                y="104"
+                width="80"
+                height="54"
+                fill="hsl(30 15% 88% / 0.45)"
+              />
+              <motion.rect
+                x="70"
+                width="80"
+                height="56"
+                fill="hsl(24 55% 32% / 0.85)"
+                initial={false}
+                animate={{
+                  y:
+                    brewingStage === 0
+                      ? 150
+                      : brewingStage === 1
+                      ? 136
+                      : brewingStage === 2
+                      ? 118
+                      : 110,
+                }}
+                transition={{ duration: 0.85, ease: PREMIUM_EASE }}
+              />
+            </g>
+
+            {/* Carafe Border & Handle */}
+            <path
+              d="M84,104 L136,104 L144,148 Q145,156 136,156 L84,156 Q75,156 76,148 Z"
+              fill="none"
+              stroke="hsl(15 20% 40%)"
+              strokeWidth="2"
+            />
+            <path
+              d="M138,116 C152,116 154,142 142,142"
+              fill="none"
+              stroke="hsl(15 20% 40%)"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
         </div>
 
-        {/* Stage Progress Pills */}
-        <div className="w-full max-w-md pt-5 flex items-center justify-between text-xs font-chinese">
+        {/* Continuous Progress Bar */}
+        <div className="w-full max-w-md h-1.5 rounded-full bg-secondary overflow-hidden mt-2 mb-4">
+          <motion.div
+            className="h-full bg-gradient-to-r from-accent-ink via-accent to-amber-500 rounded-full"
+            initial={false}
+            animate={{ width: fillPercent }}
+            transition={{ duration: 0.6, ease: PREMIUM_EASE }}
+          />
+        </div>
+
+        {/* Interactive Stage Progress Pills */}
+        <div className="w-full max-w-md flex items-center justify-between text-xs font-chinese">
           {["準備", "悶蒸", "萃取", "享用"].map((label, idx) => (
-            <div
+            <button
               key={label}
-              className={`flex items-center gap-1.5 transition-colors ${
+              type="button"
+              onClick={() => handleSelectStage(idx)}
+              className={`flex items-center gap-1.5 transition-colors py-1 px-1.5 rounded-md hover:bg-secondary/60 ${
                 brewingStage >= idx
                   ? "text-accent-ink font-semibold"
                   : "text-muted-foreground"
               }`}
             >
-              <span
+              <motion.span
+                animate={brewingStage === idx ? { scale: [1, 1.18, 1] } : { scale: 1 }}
+                transition={{ duration: 0.35 }}
                 className={`size-5 rounded-full flex items-center justify-center text-[10px] transition-colors tabular-nums ${
                   brewingStage >= idx
                     ? "bg-accent-ink text-white shadow-xs"
@@ -168,30 +316,40 @@ function BrewingModalBody({ product }) {
                 }`}
               >
                 {brewingStage > idx ? "✓" : idx + 1}
-              </span>
+              </motion.span>
               <span>{label}</span>
-            </div>
+            </button>
           ))}
         </div>
 
-        {/* Stage Description */}
-        <div className="mt-4 text-center" role="status" aria-live="polite">
-          <p className="text-sm font-semibold font-heading text-foreground">
-            {STAGE_DESCRIPTIONS[brewingStage].title}
-          </p>
-          <p className="text-xs text-muted-foreground font-chinese max-w-sm mt-0.5">
-            {STAGE_DESCRIPTIONS[brewingStage].desc}
-          </p>
+        {/* Stage Description with Smooth Transition */}
+        <div className="mt-3 text-center min-h-[42px]" role="status" aria-live="polite">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={brewingStage}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25 }}
+            >
+              <p className="text-sm font-semibold font-heading text-foreground">
+                {STAGE_DESCRIPTIONS[brewingStage].title}
+              </p>
+              <p className="text-xs text-muted-foreground font-chinese max-w-sm mt-0.5">
+                {STAGE_DESCRIPTIONS[brewingStage].desc}
+              </p>
+            </motion.div>
+          </AnimatePresence>
         </div>
 
-        <div className="mt-3">
+        <div className="mt-4">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={handleStartBrewing}
             disabled={isBrewing}
-            className="h-10 text-xs font-chinese gap-1.5 hover:border-accent-ink hover:text-accent-ink"
+            className="h-10 px-4 text-xs font-chinese gap-1.5 hover:border-accent-ink hover:text-accent-ink"
           >
             {brewingStage === 3 ? (
               <>
@@ -201,7 +359,7 @@ function BrewingModalBody({ product }) {
             ) : isBrewing ? (
               <>
                 <Droplets className="size-3.5 animate-spin text-accent-ink" aria-hidden="true" />
-                <span>注水中...</span>
+                <span>手沖注水中...</span>
               </>
             ) : (
               <>
@@ -213,21 +371,27 @@ function BrewingModalBody({ product }) {
         </div>
       </div>
 
-      {/* Flavor Notes */}
+      {/* Flavor Notes with Stagger */}
       {product.flavor_notes && product.flavor_notes.length > 0 && (
         <div className="flex flex-col gap-2">
           <span className="text-xs font-body uppercase tracking-wider text-muted-foreground">
             Flavor Profile 風味輪廓
           </span>
           <div className="flex flex-wrap gap-2">
-            {product.flavor_notes.map((note) => (
-              <Badge
+            {product.flavor_notes.map((note, idx) => (
+              <motion.div
                 key={note}
-                variant="secondary"
-                className="px-3 py-1 bg-secondary/80 text-foreground font-chinese text-xs border border-border/50"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.05 * idx, duration: 0.25 }}
               >
-                ✦ {note}
-              </Badge>
+                <Badge
+                  variant="secondary"
+                  className="px-3 py-1 bg-secondary/80 text-foreground font-chinese text-xs border border-border/50"
+                >
+                  ✦ {note}
+                </Badge>
+              </motion.div>
             ))}
           </div>
         </div>

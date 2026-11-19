@@ -1,16 +1,19 @@
 import React, { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { Mail, CheckCircle2, Coffee } from "lucide-react"
 import { useCoffee } from "@/context/CoffeeContext"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { CoffeeSteamParticles, MagneticWrapper } from "@/components/motion/CoffeeMotion"
 import { PREMIUM_EASE } from "@/lib/motion"
+import confetti from "canvas-confetti"
 
 export const NewsletterSection = () => {
   const { addSubscriber } = useCoffee()
   const [email, setEmail] = useState("")
   const [status, setStatus] = useState(null)
   const [loading, setLoading] = useState(false)
+  const prefersReducedMotion = useReducedMotion()
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -25,6 +28,18 @@ export const NewsletterSection = () => {
       if (res.success) {
         setStatus({ type: "success", message: res.message })
         setEmail("")
+        if (!prefersReducedMotion) {
+          try {
+            confetti({
+              particleCount: 40,
+              spread: 60,
+              origin: { y: 0.75 },
+              colors: ["#b87a4c", "#e3a857", "#f8f5f0"],
+            })
+          } catch {
+            // Ignore canvas fallback
+          }
+        }
       } else {
         setStatus({ type: "error", message: res.message })
       }
@@ -34,16 +49,33 @@ export const NewsletterSection = () => {
 
   return (
     <section className="py-20 md:py-24 bg-[hsl(15_30%_8%)] text-white relative overflow-hidden">
+      <CoffeeSteamParticles tint="bg-amber-200/25" />
+
       <div className="container mx-auto px-4 md:px-8 max-w-4xl relative z-10 text-center flex flex-col items-center">
         <motion.div
-          initial={{ opacity: 0, y: 14 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.1 }}
-          transition={{ duration: 0.35, ease: PREMIUM_EASE }}
+          viewport={{ once: true, amount: 0.15 }}
+          transition={{ duration: 0.55, ease: PREMIUM_EASE }}
           className="flex flex-col items-center gap-4 max-w-xl w-full"
         >
-          <div className="size-14 rounded-full bg-accent/20 border border-accent/50 flex items-center justify-center text-accent mb-2">
-            <Mail className="size-6" aria-hidden="true" />
+          {/* Orbiting Halo + Floating Mail Icon */}
+          <div className="relative size-16 flex items-center justify-center mb-2">
+            {!prefersReducedMotion && (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
+                aria-hidden="true"
+                className="absolute inset-0 rounded-full border border-dashed border-accent/55"
+              />
+            )}
+            <motion.div
+              animate={prefersReducedMotion ? undefined : { y: [0, -4, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="size-12 rounded-full bg-accent/20 border border-accent/50 flex items-center justify-center text-accent"
+            >
+              <Mail className="size-6" aria-hidden="true" />
+            </motion.div>
           </div>
 
           <h2 className="font-heading text-3xl md:text-4xl font-semibold tracking-tight text-white">
@@ -79,13 +111,15 @@ export const NewsletterSection = () => {
               />
             </div>
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="h-12 px-8 bg-accent hover:bg-accent/90 text-[hsl(15_30%_8%)] font-chinese font-semibold tracking-wider rounded-lg shadow-md shrink-0"
-            >
-              {loading ? "處理中..." : "立即訂閱"}
-            </Button>
+            <MagneticWrapper strength={0.18}>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full sm:w-auto h-12 px-8 bg-accent hover:bg-accent/90 text-[hsl(15_30%_8%)] font-chinese font-semibold tracking-wider rounded-lg shadow-md shrink-0"
+              >
+                {loading ? "處理中..." : "立即訂閱"}
+              </Button>
+            </MagneticWrapper>
           </form>
 
           <div
@@ -98,8 +132,8 @@ export const NewsletterSection = () => {
               {status && (
                 <motion.div
                   key={status.message}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.25 }}
                   className={`flex items-center gap-2 text-sm font-chinese pt-1 ${

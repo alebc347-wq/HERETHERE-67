@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from "react-router-dom"
 import { AnimatePresence, MotionConfig } from "framer-motion"
 import { Navbar } from "@/components/layout/Navbar"
 import { Footer } from "@/components/layout/Footer"
+import { ScrollProgressRoastLine } from "@/components/motion/CoffeeMotion"
 import { Home } from "@/pages/Home"
 import { Shop } from "@/pages/Shop"
 import { Blog } from "@/pages/Blog"
@@ -24,6 +25,7 @@ export function App() {
   return (
     <MotionConfig reducedMotion="user">
       <div className="min-h-screen flex flex-col bg-background text-foreground antialiased selection:bg-accent/20 selection:text-foreground">
+        <ScrollProgressRoastLine />
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:rounded-md focus:bg-primary focus:text-primary-foreground focus:shadow-lg font-chinese text-sm"

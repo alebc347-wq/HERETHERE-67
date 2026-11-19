@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Menu, X, Coffee, Lock } from "lucide-react"
 import { useCoffee } from "@/context/CoffeeContext"
 import { cn } from "@/lib/utils"
+import { PREMIUM_EASE } from "@/lib/motion"
 
 export const Navbar = () => {
   const { brandSettings } = useCoffee()
@@ -34,7 +35,10 @@ export const Navbar = () => {
   }, [])
 
   return (
-    <header
+    <motion.header
+      initial={{ y: -18, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: PREMIUM_EASE }}
       className={cn(
         "fixed top-0 left-0 right-0 z-40 transition-colors duration-300",
         scrolled
@@ -46,9 +50,13 @@ export const Navbar = () => {
         {/* Brand Logo & Name */}
         <Link
           to="/"
-          className="flex items-center gap-3 group rounded-full p-1 transition-opacity hover:opacity-90"
+          className="flex items-center gap-3 group rounded-full p-1 transition-opacity hover:opacity-95"
         >
-          <div className="relative size-10 rounded-full overflow-hidden border-2 border-accent/70 shadow-sm shrink-0 bg-card flex items-center justify-center">
+          <motion.div
+            whileHover={{ rotate: [0, -8, 8, 0] }}
+            transition={{ duration: 0.45, ease: "easeInOut" }}
+            className="relative size-10 rounded-full overflow-hidden border-2 border-accent/70 shadow-sm shrink-0 bg-card flex items-center justify-center"
+          >
             {brandSettings.logoUrl && !logoFailed ? (
               <img
                 src={brandSettings.logoUrl}
@@ -61,7 +69,7 @@ export const Navbar = () => {
             ) : (
               <Coffee className="size-5 text-accent-ink" aria-hidden="true" />
             )}
-          </div>
+          </motion.div>
           <div className="flex flex-col">
             <span className="font-display text-xl md:text-2xl font-bold tracking-wider text-foreground group-hover:text-accent-ink transition-colors">
               HERETHERE
@@ -92,12 +100,18 @@ export const Navbar = () => {
                     : "text-foreground/85 hover:text-accent-ink"
                 )}
               >
-                {link.label}
+                <motion.span
+                  className="inline-block"
+                  whileHover={{ y: -1.5 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                >
+                  {link.label}
+                </motion.span>
                 {isActive && (
                   <motion.div
                     layoutId="navbar-indicator"
                     className="absolute bottom-0 left-0 right-0 h-[2px] bg-accent-ink rounded-full"
-                    transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+                    transition={{ type: "spring", stiffness: 360, damping: 28 }}
                   />
                 )}
               </Link>
@@ -129,11 +143,29 @@ export const Navbar = () => {
             aria-expanded={isOpen}
             aria-controls="mobile-nav-menu"
           >
-            {isOpen ? (
-              <X className="size-6" aria-hidden="true" />
-            ) : (
-              <Menu className="size-6" aria-hidden="true" />
-            )}
+            <AnimatePresence mode="wait" initial={false}>
+              {isOpen ? (
+                <motion.span
+                  key="close"
+                  initial={{ rotate: -90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: 90, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <X className="size-6" aria-hidden="true" />
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="menu"
+                  initial={{ rotate: 90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: -90, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Menu className="size-6" aria-hidden="true" />
+                </motion.span>
+              )}
+            </AnimatePresence>
           </button>
         </div>
       </div>
@@ -147,48 +179,60 @@ export const Navbar = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            transition={{ duration: 0.32, ease: PREMIUM_EASE }}
             className="md:hidden overflow-hidden bg-background border-b border-border shadow-lg"
           >
             <div className="container mx-auto px-6 py-4 flex flex-col gap-1">
-              {navLinks.map((link) => {
+              {navLinks.map((link, idx) => {
                 const isActive =
                   link.path === "/"
                     ? location.pathname === "/"
                     : location.pathname.startsWith(link.path)
 
                 return (
-                  <Link
+                  <motion.div
                     key={link.path}
-                    to={link.path}
-                    aria-current={isActive ? "page" : undefined}
-                    className={cn(
-                      "min-h-[44px] text-base tracking-widest py-2.5 transition-colors font-chinese flex items-center justify-between border-b border-border/30",
-                      isActive
-                        ? "text-accent-ink font-semibold"
-                        : "text-foreground/85 hover:text-accent-ink"
-                    )}
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.04 * idx, duration: 0.25, ease: PREMIUM_EASE }}
                   >
-                    <span>{link.label}</span>
-                    {isActive && (
-                      <span className="size-2 rounded-full bg-accent-ink" aria-hidden="true" />
-                    )}
-                  </Link>
+                    <Link
+                      to={link.path}
+                      aria-current={isActive ? "page" : undefined}
+                      className={cn(
+                        "min-h-[44px] text-base tracking-widest py-2.5 transition-colors font-chinese flex items-center justify-between border-b border-border/30",
+                        isActive
+                          ? "text-accent-ink font-semibold"
+                          : "text-foreground/85 hover:text-accent-ink"
+                      )}
+                    >
+                      <span>{link.label}</span>
+                      {isActive && (
+                        <span className="size-2 rounded-full bg-accent-ink" aria-hidden="true" />
+                      )}
+                    </Link>
+                  </motion.div>
                 )
               })}
 
-              <Link
-                to="/admin"
-                aria-current={location.pathname === "/admin" ? "page" : undefined}
-                className="min-h-[44px] text-sm text-muted-foreground hover:text-accent-ink flex items-center gap-2 pt-2 font-chinese"
+              <motion.div
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2, duration: 0.25, ease: PREMIUM_EASE }}
               >
-                <Lock className="size-4 text-accent-ink" aria-hidden="true" />
-                <span>品牌管理後台</span>
-              </Link>
+                <Link
+                  to="/admin"
+                  aria-current={location.pathname === "/admin" ? "page" : undefined}
+                  className="min-h-[44px] text-sm text-muted-foreground hover:text-accent-ink flex items-center gap-2 pt-2 font-chinese"
+                >
+                  <Lock className="size-4 text-accent-ink" aria-hidden="true" />
+                  <span>品牌管理後台</span>
+                </Link>
+              </motion.div>
             </div>
           </motion.nav>
         )}
       </AnimatePresence>
-    </header>
+    </motion.header>
   )
 }

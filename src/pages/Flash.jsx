@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   Zap,
   MapPin,
@@ -14,7 +14,8 @@ import moment from "moment"
 import { useCoffee } from "@/context/CoffeeContext"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
-import { pageTransition, PREMIUM_EASE } from "@/lib/motion"
+import { AnimatedCountdownDigit, SpotlightTiltCard } from "@/components/motion/CoffeeMotion"
+import { pageTransition, clipRevealUp, PREMIUM_EASE } from "@/lib/motion"
 
 function calculateEventCountdown(event) {
   if (!event) {
@@ -72,6 +73,7 @@ function calculateEventCountdown(event) {
 export const Flash = () => {
   const { flashEvents } = useCoffee()
   const [selectedEventId, setSelectedEventId] = useState(flashEvents[0]?.id || null)
+  const [selectedImageIdx, setSelectedImageIdx] = useState(0)
 
   const activeEvent = flashEvents.find((e) => e.id === selectedEventId) || flashEvents[0]
   const [timeLeft, setTimeLeft] = useState(() => calculateEventCountdown(activeEvent))
@@ -94,6 +96,26 @@ export const Flash = () => {
 
   const startFormatted = moment(activeEvent.event_start).format("YYYY 年 MM 月 DD 日 HH:mm")
   const endFormatted = moment(activeEvent.event_end).format("YYYY 年 MM 月 DD 日 HH:mm")
+  const currentHeroImage =
+    activeEvent.images?.[selectedImageIdx] || activeEvent.images?.[0] || ""
+
+  const highlights = [
+    {
+      icon: Sparkles,
+      title: "競標批次手沖",
+      desc: "現場限量供應未公開上市的稀有高海拔單品。",
+    },
+    {
+      icon: Coffee,
+      title: "感官盲測體驗",
+      desc: "由專屬杯測師引導，辨識花香、果酸與發酵層次。",
+    },
+    {
+      icon: Gift,
+      title: "快閃限定伴手禮",
+      desc: "現場消費滿千即贈限定手沖試飲包與設計提袋。",
+    },
+  ]
 
   return (
     <motion.div
@@ -142,16 +164,25 @@ export const Flash = () => {
                   type="button"
                   onClick={() => {
                     setSelectedEventId(e.id)
+                    setSelectedImageIdx(0)
                     setTimeLeft(calculateEventCountdown(e))
                   }}
                   aria-pressed={isSelected}
-                  className={`min-h-[44px] px-4 py-2 rounded-full text-xs sm:text-sm font-chinese transition-colors duration-200 ${
+                  className={`relative min-h-[44px] px-4 py-2 rounded-full text-xs sm:text-sm font-chinese transition-colors duration-200 ${
                     isSelected
-                      ? "bg-accent-ink text-white font-medium shadow-sm"
+                      ? "text-white font-medium"
                       : "bg-secondary text-foreground/85 hover:bg-secondary/80"
                   }`}
                 >
-                  {e.title.slice(0, 22)}...
+                  {isSelected && (
+                    <motion.span
+                      layoutId="flash-event-pill"
+                      transition={{ type: "spring", stiffness: 350, damping: 28 }}
+                      className="absolute inset-0 rounded-full bg-accent-ink shadow-sm"
+                      aria-hidden="true"
+                    />
+                  )}
+                  <span className="relative z-10">{e.title.slice(0, 22)}...</span>
                 </button>
               )
             })}
@@ -162,20 +193,32 @@ export const Flash = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           {/* Left Column: Image Gallery & Highlights */}
           <div className="lg:col-span-7 flex flex-col gap-6">
-            <div className="rounded-2xl overflow-hidden border border-border shadow-md aspect-[16/10] bg-secondary relative">
-              {activeEvent.images?.[0] ? (
-                <img
-                  src={activeEvent.images[0]}
-                  alt={activeEvent.title}
-                  width={1200}
-                  height={750}
-                  className="size-full object-cover"
-                />
-              ) : (
-                <div className="size-full flex items-center justify-center text-muted-foreground/50">
-                  <Coffee className="size-16" aria-hidden="true" />
-                </div>
-              )}
+            <motion.div
+              variants={clipRevealUp}
+              initial="hidden"
+              animate="visible"
+              className="rounded-2xl overflow-hidden border border-border shadow-md aspect-[16/10] bg-secondary relative"
+            >
+              <AnimatePresence mode="wait">
+                {currentHeroImage ? (
+                  <motion.img
+                    key={currentHeroImage}
+                    src={currentHeroImage}
+                    alt={activeEvent.title}
+                    width={1200}
+                    height={750}
+                    initial={{ opacity: 0, scale: 1.03 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.35, ease: PREMIUM_EASE }}
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <div className="size-full flex items-center justify-center text-muted-foreground/50">
+                    <Coffee className="size-16" aria-hidden="true" />
+                  </div>
+                )}
+              </AnimatePresence>
 
               <div className="absolute top-4 left-4">
                 <Badge className="bg-background/95 text-foreground font-chinese px-3.5 py-1.5 shadow-sm">
@@ -186,61 +229,74 @@ export const Flash = () => {
                     : "活動已圓滿落幕"}
                 </Badge>
               </div>
-            </div>
+            </motion.div>
 
+            {/* Interactive Thumbnail Gallery */}
             {activeEvent.images && activeEvent.images.length > 1 && (
-              <div className="grid grid-cols-2 gap-4">
-                {activeEvent.images.slice(1, 3).map((imgUrl, idx) => (
-                  <div
-                    key={imgUrl}
-                    className="rounded-xl overflow-hidden border border-border/80 aspect-[16/10] bg-secondary shadow-sm group"
-                  >
-                    <img
-                      src={imgUrl}
-                      alt={`${activeEvent.title} 活動剪影 ${idx + 1}`}
-                      width={600}
-                      height={375}
-                      loading="lazy"
-                      className="size-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                ))}
+              <div className="grid grid-cols-3 gap-4">
+                {activeEvent.images.slice(0, 3).map((imgUrl, idx) => {
+                  const isActiveThumb = selectedImageIdx === idx
+                  return (
+                    <button
+                      key={imgUrl}
+                      type="button"
+                      onClick={() => setSelectedImageIdx(idx)}
+                      aria-label={`檢視活動照片 ${idx + 1}`}
+                      aria-pressed={isActiveThumb}
+                      className={`rounded-xl overflow-hidden border-2 aspect-[16/10] bg-secondary shadow-sm group transition-all ${
+                        isActiveThumb
+                          ? "border-accent-ink ring-2 ring-accent/30"
+                          : "border-border/80 opacity-80 hover:opacity-100"
+                      }`}
+                    >
+                      <img
+                        src={imgUrl}
+                        alt={`${activeEvent.title} 活動剪影 ${idx + 1}`}
+                        width={600}
+                        height={375}
+                        loading="lazy"
+                        className="size-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </button>
+                  )
+                })}
               </div>
             )}
 
+            {/* Staggered Highlight Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-              <div className="p-4 rounded-xl bg-card border border-border/70 flex flex-col gap-2">
-                <Sparkles className="size-5 text-accent-ink" aria-hidden="true" />
-                <h3 className="font-heading font-semibold text-sm text-foreground">
-                  競標批次手沖
-                </h3>
-                <p className="text-xs text-muted-foreground font-chinese">
-                  現場限量供應未公開上市的稀有高海拔單品。
-                </p>
-              </div>
-              <div className="p-4 rounded-xl bg-card border border-border/70 flex flex-col gap-2">
-                <Coffee className="size-5 text-accent-ink" aria-hidden="true" />
-                <h3 className="font-heading font-semibold text-sm text-foreground">
-                  感官盲測體驗
-                </h3>
-                <p className="text-xs text-muted-foreground font-chinese">
-                  由專屬杯測師引導，辨識花香、果酸與發酵層次。
-                </p>
-              </div>
-              <div className="p-4 rounded-xl bg-card border border-border/70 flex flex-col gap-2">
-                <Gift className="size-5 text-accent-ink" aria-hidden="true" />
-                <h3 className="font-heading font-semibold text-sm text-foreground">
-                  快閃限定伴手禮
-                </h3>
-                <p className="text-xs text-muted-foreground font-chinese">
-                  現場消費滿千即贈限定手沖試飲包與設計提袋。
-                </p>
-              </div>
+              {highlights.map((h, idx) => {
+                const Icon = h.icon
+                return (
+                  <motion.div
+                    key={h.title}
+                    initial={{ opacity: 0, y: 18 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.08 * idx, duration: 0.45, ease: PREMIUM_EASE }}
+                  >
+                    <SpotlightTiltCard className="h-full rounded-xl" maxTilt={4}>
+                      <div className="h-full p-4 rounded-xl bg-card border border-border/70 flex flex-col gap-2 hover:border-accent-ink/50 transition-colors">
+                        <Icon className="size-5 text-accent-ink" aria-hidden="true" />
+                        <h3 className="font-heading font-semibold text-sm text-foreground">
+                          {h.title}
+                        </h3>
+                        <p className="text-xs text-muted-foreground font-chinese">{h.desc}</p>
+                      </div>
+                    </SpotlightTiltCard>
+                  </motion.div>
+                )
+              })}
             </div>
           </div>
 
-          {/* Right Column: Event Details & Action Box */}
-          <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-24">
+          {/* Right Column: Event Details & Flipping Countdown */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.15, ease: PREMIUM_EASE }}
+            className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-24"
+          >
             <Card className="rounded-2xl border-border bg-card shadow-md p-6 sm:p-8 flex flex-col gap-6">
               <div>
                 <span className="text-xs uppercase tracking-widest text-accent-ink font-semibold font-body">
@@ -274,9 +330,10 @@ export const Flash = () => {
                       key={t.label}
                       className="bg-background rounded-md p-2 border border-border/70 flex flex-col items-center"
                     >
-                      <span className="font-display text-2xl font-bold text-accent-ink tabular-nums">
-                        {t.val}
-                      </span>
+                      <AnimatedCountdownDigit
+                        value={t.val}
+                        className="font-display text-2xl font-bold text-accent-ink tabular-nums"
+                      />
                       <span className="text-[11px] text-muted-foreground font-chinese">
                         {t.label}
                       </span>
@@ -312,7 +369,9 @@ export const Flash = () => {
 
               {activeEvent.map_link && (
                 <div className="pt-2">
-                  <a
+                  <motion.a
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.98 }}
                     href={activeEvent.map_link}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -321,11 +380,11 @@ export const Flash = () => {
                     <MapPin className="size-4" aria-hidden="true" />
                     <span>在 Google 地圖中開啟導航</span>
                     <ExternalLink className="size-3.5 text-accent" aria-hidden="true" />
-                  </a>
+                  </motion.a>
                 </div>
               )}
             </Card>
-          </div>
+          </motion.div>
         </div>
       </div>
     </motion.div>

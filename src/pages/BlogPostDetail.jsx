@@ -7,7 +7,7 @@ import { useCoffee } from "@/context/CoffeeContext"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { pageTransition } from "@/lib/motion"
+import { pageTransition, clipRevealUp, PREMIUM_EASE } from "@/lib/motion"
 import { sanitizeHtml } from "@/lib/security"
 
 export const BlogPostDetail = () => {
@@ -56,18 +56,31 @@ export const BlogPostDetail = () => {
     >
       <div className="container mx-auto px-4 md:px-8 max-w-4xl">
         {/* Back Link */}
-        <div className="mb-8">
+        <motion.div
+          initial={{ opacity: 0, x: -12 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, ease: PREMIUM_EASE }}
+          className="mb-8"
+        >
           <Link
             to="/blog"
-            className="inline-flex items-center gap-2 text-sm font-chinese text-muted-foreground hover:text-accent-ink transition-colors py-1"
+            className="group inline-flex items-center gap-2 text-sm font-chinese text-muted-foreground hover:text-accent-ink transition-colors py-1"
           >
-            <ArrowLeft className="size-4" aria-hidden="true" />
+            <ArrowLeft
+              className="size-4 transition-transform group-hover:-translate-x-1"
+              aria-hidden="true"
+            />
             <span>返回咖啡誌列表</span>
           </Link>
-        </div>
+        </motion.div>
 
         {/* Header Metadata */}
-        <header className="flex flex-col gap-4 mb-8">
+        <motion.header
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, delay: 0.08, ease: PREMIUM_EASE }}
+          className="flex flex-col gap-4 mb-8"
+        >
           <div className="flex flex-wrap items-center gap-3">
             <Badge variant="accent" className="font-chinese text-xs text-accent-ink">
               {post.category}
@@ -126,11 +139,16 @@ export const BlogPostDetail = () => {
               )}
             </Button>
           </div>
-        </header>
+        </motion.header>
 
-        {/* Cover Image */}
+        {/* Cover Image Curtain Wipe */}
         {post.cover_image && (
-          <div className="aspect-[16/9] w-full overflow-hidden rounded-2xl mb-12 shadow-lg bg-secondary">
+          <motion.div
+            variants={clipRevealUp}
+            initial="hidden"
+            animate="visible"
+            className="aspect-[16/9] w-full overflow-hidden rounded-2xl mb-12 shadow-lg bg-secondary"
+          >
             <img
               src={post.cover_image}
               alt={post.title}
@@ -138,11 +156,14 @@ export const BlogPostDetail = () => {
               height={675}
               className="size-full object-cover"
             />
-          </div>
+          </motion.div>
         )}
 
         {/* Article Body (Sanitized via DOMPurify) */}
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, delay: 0.25, ease: PREMIUM_EASE }}
           className="prose prose-lg dark:prose-invert font-chinese leading-relaxed text-foreground/85 max-w-[68ch] mx-auto pt-2
             prose-headings:font-heading prose-headings:font-semibold prose-headings:text-foreground
             prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
@@ -160,10 +181,14 @@ export const BlogPostDetail = () => {
           {prevPost ? (
             <Link
               to={`/blog/${prevPost.id}`}
-              className="group p-5 rounded-xl border border-border/80 hover:border-accent-ink bg-card transition-colors flex flex-col gap-1.5"
+              className="group p-5 rounded-xl border border-border/80 hover:border-accent-ink bg-card transition-all hover:-translate-y-0.5 flex flex-col gap-1.5"
             >
               <span className="text-xs text-muted-foreground font-chinese flex items-center gap-1">
-                <ArrowLeft className="size-3" aria-hidden="true" /> 上一篇文章
+                <ArrowLeft
+                  className="size-3 transition-transform group-hover:-translate-x-1"
+                  aria-hidden="true"
+                />{" "}
+                上一篇文章
               </span>
               <span className="font-heading font-medium text-foreground group-hover:text-accent-ink transition-colors line-clamp-1">
                 {prevPost.title}
@@ -176,10 +201,14 @@ export const BlogPostDetail = () => {
           {nextPost && (
             <Link
               to={`/blog/${nextPost.id}`}
-              className="group p-5 rounded-xl border border-border/80 hover:border-accent-ink bg-card transition-colors flex flex-col gap-1.5 text-right"
+              className="group p-5 rounded-xl border border-border/80 hover:border-accent-ink bg-card transition-all hover:-translate-y-0.5 flex flex-col gap-1.5 text-right"
             >
               <span className="text-xs text-muted-foreground font-chinese flex items-center justify-end gap-1">
-                下一篇文章 <ArrowRight className="size-3" aria-hidden="true" />
+                下一篇文章{" "}
+                <ArrowRight
+                  className="size-3 transition-transform group-hover:translate-x-1"
+                  aria-hidden="true"
+                />
               </span>
               <span className="font-heading font-medium text-foreground group-hover:text-accent-ink transition-colors line-clamp-1">
                 {nextPost.title}
